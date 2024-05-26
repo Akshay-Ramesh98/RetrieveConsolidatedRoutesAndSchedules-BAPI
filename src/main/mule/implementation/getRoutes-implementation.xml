@@ -16,9 +16,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	"transactionId" : vars.transactionId
 }]]]></http:headers>
 				</http:request>
-			<ee:transform doc:name="Transform Message" doc:id="5a3d6986-abe1-4ddc-ba0a-feeb77838e7d">
-					<ee:message>
-						<ee:set-payload><![CDATA[
+			<ee:transform doc:name="Transform Message" doc:id="3fa49c5d-0f65-40d6-aa7f-763a169d1554">
+						<ee:message>
+							<ee:set-payload><![CDATA[
 %dw 2.0
 
 output application/json
@@ -29,7 +29,7 @@ var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "appl
 
 payload map (value, index) -> {
 
-    companyCode: vars.transportCompany,
+    companyCode11: vars.transportCompany,
 
     originLocation: {
 
@@ -48,8 +48,8 @@ payload map (value, index) -> {
 }
 
 ]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
+						</ee:message>
+					</ee:transform>
 		</ee:cache>
 	</sub-flow>
 	<sub-flow name="getRoutes-CallFastGo-subFlow" doc:id="5cdd7a4d-f1d5-40ce-8649-7773d994d821" >
@@ -88,11 +88,26 @@ payload map(value,index)->(
 		<set-variable value="Routes" doc:name="Set Variable" doc:id="97b8851c-6a7c-4dc0-8d8f-df2a847c80d9" variableName="resource"/>
 		<choice doc:name="Choice" doc:id="72677fd1-0c3b-4096-9028-c01a9a95ce07" >
 			<when expression='#[vars.transportCompany == "FastGo"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="3c1eae6f-2ae9-4c28-ac08-1d2ae24ac394" message="#[vars.departureLocation]"/>
 				<flow-ref doc:name="Flow Reference" doc:id="656cad98-fca9-460d-9a10-2f604b7506b8" name="getRoutes-CallFastGo-subFlow" />
 			</when>
 			<when expression='#[vars.transportCompany == "TravelOnTip"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="f242b989-9947-46ba-9733-c2d453ca5da5" message="#[vars.destinationLocation]"/>
 				<flow-ref doc:name="Flow Reference" doc:id="84b3e190-4665-4588-9252-ede43f78d83f" name="getRoutes-CallTravelOnTip-subFlow" />
 				</when>
+			<when expression="#[vars.transportCompany != null and vars.transportCompany != 'FastGo' and  vars.transportCompany != 'TravelOnTip']">
+				<logger level="INFO" doc:name="Logger" doc:id="07a4fa24-6c03-4e48-9ea0-4e4186c8eb47" message="logger for new choice"/>
+				<ee:transform doc:name="Transform Message" doc:id="eee68bc3-e073-4dbc-8fb9-b82e9b014110" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error" : vars.transportCompany ++ " not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
 			<otherwise >
 				<scatter-gather doc:name="Scatter-Gather" doc:id="40c9d1b9-0922-414e-ae7d-3c15e145a84d" >
 					<route >

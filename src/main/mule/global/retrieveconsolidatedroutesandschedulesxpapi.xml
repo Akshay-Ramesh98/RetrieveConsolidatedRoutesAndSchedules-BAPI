@@ -31,6 +31,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<error-handler ref="globalErrorHandlerError_Handler" />
     </flow>
     <sub-flow name="retrieveconsolidatedroutesandschedulesxpapiSub_Flow" doc:id="a3514f0e-0237-4732-ae97-dc916c942208" >
+		<logger level="INFO" doc:name="Logger" doc:id="ae3cd168-316d-44e9-adc0-27d42a7bf4e8" />
 		<ee:transform doc:name="Initialise Variables for Request Event Transform Message" doc:id="13a6c0d0-4a71-4e66-922f-8309bee87868" >
 			<ee:variables>
 				<ee:set-variable variableName="transactionId"><![CDATA[%dw 2.0
@@ -49,7 +50,13 @@ attributes.queryParams.'destinationLocation']]></ee:set-variable>
 				<ee:set-variable variableName="transportType" ><![CDATA[attributes.uriParams.'transportType']]></ee:set-variable>
             </ee:variables>
 		</ee:transform>
-	</sub-flow>
+		<logger level="INFO" doc:name="Logger" doc:id="33514ae1-faa4-4b21-ab5d-d03ee75db20c" />
+		<logger level="INFO" doc:name="Logger" doc:id="e0bcf6c6-5a42-4ce7-b2c0-008ab426088c" />
+		<logger level="INFO" doc:name="Logger" doc:id="71fd61de-8145-40dc-ae85-3fc9448609fc" />
+		<logger level="INFO" doc:name="Logger" doc:id="26ad8013-0866-43cd-9f6f-7c32bd5f0542" />
+		<logger level="INFO" doc:name="Logger" doc:id="5d8ba202-4b3f-4be7-b447-4f05b353d748" />
+	
+</sub-flow>
 	<flow name="get:\booking\(transportType)\routes:retrieveconsolidatedroutesandschedulesxpapi-config">
         <flow-ref doc:name="Flow Reference" doc:id="1005ac2e-869a-42af-833a-cf8dbc6ffef2" name="retrieveconsolidatedroutesandschedulesxpapiSub_Flow"/>
 		<logger level="INFO" doc:name="Logger" doc:id="fb064e9b-7a21-420b-8f8e-a5e16fb5381f" message="Request Recieved for Routes BAPI For TransactionId: #[vars.transactionId]"/>
