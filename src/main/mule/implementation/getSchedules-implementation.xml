@@ -73,23 +73,23 @@ var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "appl
 	<sub-flow name="getSchedules-CallFastGo-subFlow" doc:id="87496d86-91a4-41f2-9c21-d7ef3d931623" >
 		<set-variable value="#[&quot;/api/&quot; ++ (vars.transportType default &quot;&quot;) ++ p(
 'http.requester.fastGo.schedulesPath')]" doc:name="Set Variable" doc:id="e944b23d-904b-419d-823b-a43091dc6ac1" variableName="resourcePath" />
-		<ee:cache doc:name="Cache" doc:id="cfe6744a-9c66-4545-a038-8489790e44a5" cachingStrategy-ref="Caching_Strategy">
-					<http:request method="GET" doc:name="Request" doc:id="5e8222bf-e19b-4762-8743-9ff8b4ad3650" config-ref="HTTP_Request_configuration_FastGo-SAPI" path="#[vars.resourcePath]">
+		<http:request method="GET" doc:name="Request" doc:id="5e8222bf-e19b-4762-8743-9ff8b4ad3650" config-ref="HTTP_Request_configuration_FastGo-SAPI" path="#[vars.resourcePath]">
 					<http:headers><![CDATA[#[output application/java
 ---
 {
 	"transactionId" : vars.transactionId
 }]]]></http:headers>
 				</http:request>
-					<ee:transform doc:name="Transform Message" doc:id="0613fddd-97b3-45c1-b318-30a8331b4429">
+		<ee:transform doc:name="Transform Message" doc:id="0613fddd-97b3-45c1-b318-30a8331b4429">
 					<ee:message>
 						<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "application/json")
 ---
-payload map(value,index)->(
-	{
-    "companyName": "FastGo",
+(payload map (value, index) -> 
+    if (vars.destinationLocation == null and vars.departureLocation == null) 
+    {
+   "companyName": vars.transportCompany,
     "availableSeats": value.availableSeats,
     "departureDateTime": value.departureDateTime,
     "travelRoute": {
@@ -100,11 +100,39 @@ payload map(value,index)->(
         "locationDesc": (LocationMapping filter($.locationCode == value.fromLocation))[0].LocationDesc
       }
     }
-  }
-)]]></ee:set-payload>
+    }
+    else if (vars.destinationLocation == value.toLocation) 
+     {
+        "companyName": vars.transportCompany,
+    "availableSeats": value.availableSeats,
+    "departureDateTime": value.departureDateTime,
+    "travelRoute": {
+      "destinationLocation": {
+        "locationDesc": (LocationMapping filter($.locationCode == value.toLocation))[0].LocationDesc
+      },
+      "originLocation": {
+        "locationDesc": (LocationMapping filter($.locationCode == value.fromLocation))[0].LocationDesc
+      }
+    }
+     }
+    else if (vars.departureLocation == value.fromLocation) 
+     {
+       "companyName": vars.transportCompany,
+    "availableSeats": value.availableSeats,
+    "departureDateTime": value.departureDateTime,
+    "travelRoute": {
+      "destinationLocation": {
+        "locationDesc": (LocationMapping filter($.locationCode == value.toLocation))[0].LocationDesc
+      },
+      "originLocation": {
+        "locationDesc": (LocationMapping filter($.locationCode == value.fromLocation))[0].LocationDesc
+      }
+    }
+     }
+    else null
+)filter (item) -> item != null]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-				</ee:cache>
 	</sub-flow>
 	<sub-flow name="getSchedules-implementationSub_Flow" doc:id="102be632-fb33-43d7-be3a-f943639bdc7f" >
 		<set-variable value="Schedules" doc:name="Set Variable" doc:id="876077fc-c257-4ff8-aca6-de5743c98c5c" variableName="resource"/>
