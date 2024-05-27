@@ -8,49 +8,63 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	<sub-flow name="getRoutes-CallTravelOnTip-subFlow" doc:id="0256ee0e-b9c0-449f-a8bc-95f37cb3e1ff" >
 		<set-variable value="#[&quot;/api/&quot; ++ (vars.transportType default &quot;&quot;) ++ p(
 'http.requester.travelOnTip.routesPath')]" doc:name="Set Variable" doc:id="0b7ae2cd-e358-42d3-9167-23ad5db5a02a" variableName="resourcePath" />
-		<ee:cache doc:name="Cache" doc:id="e6a1ec83-7577-499b-b51e-8a0e29ed0213" cachingStrategy-ref="Caching_Strategy">
-			<http:request method="GET" doc:name="Request" doc:id="4acd44da-b55b-4d24-875b-ece0af34b7fa" config-ref="HTTP_Request_configuration_TravelOnTip-SAPI" path="#[vars.resourcePath]">
+		<http:request method="GET" doc:name="Request" doc:id="4acd44da-b55b-4d24-875b-ece0af34b7fa" config-ref="HTTP_Request_configuration_TravelOnTip-SAPI" path="#[vars.resourcePath]">
 					<http:headers><![CDATA[#[output application/java
 ---
 {
 	"transactionId" : vars.transactionId
 }]]]></http:headers>
 				</http:request>
-			<ee:transform doc:name="Transform Message" doc:id="3fa49c5d-0f65-40d6-aa7f-763a169d1554">
+		<ee:transform doc:name="Transform Message" doc:id="3fa49c5d-0f65-40d6-aa7f-763a169d1554">
 						<ee:message>
 							<ee:set-payload><![CDATA[
 %dw 2.0
-
 output application/json
-
 var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "application/json")
-
 ---
-
-payload map (value, index) -> {
-
-    companyName: vars.transportCompany,
-
+(payload map (value, index) -> 
+    if (vars.destinationLocation == null and vars.departureLocation == null) 
+     {
+         companyName: vars.transportCompany,
     originLocation: {
-
         locationCode: value.originLocation.locationCode,
-
         locationDesc: (LocationMapping filter ($.locationCode == value.originLocation.locationCode))[0].LocationDesc
-
     },
     destinationLocation: {
-
         locationCode: value.destinationLocation.locationCode,
         locationDesc: (LocationMapping filter ($.locationCode == value.destinationLocation.locationCode))[0].LocationDesc
-
     }
-
-}
+    } 
+    else if (vars.destinationLocation == value.destinationLocation.locationCode) 
+     {
+         companyName:  vars.transportCompany,
+    originLocation: {
+        locationCode: value.originLocation.locationCode,
+        locationDesc: (LocationMapping filter ($.locationCode == value.originLocation.locationCode))[0].LocationDesc
+    },
+    destinationLocation: {
+        locationCode: value.destinationLocation.locationCode,
+        locationDesc: (LocationMapping filter ($.locationCode == value.destinationLocation.locationCode))[0].LocationDesc
+    }
+    } 
+    else if (vars.departureLocation == value.originLocation.locationCode) 
+     {
+         companyName:  vars.transportCompany,
+    originLocation: {
+        locationCode: value.originLocation.locationCode,
+        locationDesc: (LocationMapping filter ($.locationCode == value.originLocation.locationCode))[0].LocationDesc
+    },
+    destinationLocation: {
+        locationCode: value.destinationLocation.locationCode,
+        locationDesc: (LocationMapping filter ($.locationCode == value.destinationLocation.locationCode))[0].LocationDesc
+    }
+    } 
+    else null
+)filter (item) -> item != null
 
 ]]></ee:set-payload>
 						</ee:message>
 					</ee:transform>
-		</ee:cache>
 	</sub-flow>
 	<sub-flow name="getRoutes-CallFastGo-subFlow" doc:id="5cdd7a4d-f1d5-40ce-8649-7773d994d821" >
 		<set-variable value="#[&quot;/api/&quot; ++ (vars.transportType default &quot;&quot;) ++ p(
@@ -106,7 +120,7 @@ var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "appl
         }
     } 
     else null
-    )filter (item) -> item != null
+)filter (item) -> item != null
 
 
 
