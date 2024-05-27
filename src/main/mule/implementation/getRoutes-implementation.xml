@@ -68,7 +68,7 @@ payload map (value, index) -> {
 output application/json
 var LocationMapping = readUrl("classpath://json/LocationCodeMapping.json", "application/json")
 ---
-payload map(value,index)->(
+(payload map(value,index)->
 	 if (vars.destinationLocation == null and vars.departureLocation == null) 
      {
         "companyName": vars.transportCompany,
@@ -106,8 +106,8 @@ payload map(value,index)->(
         }
     } 
     else null
-    filter (item) -> item != null
-)
+    )filter (item) -> item != null
+
 
 
 
