@@ -87,6 +87,18 @@ payload map(value,index)->(
 			<when expression='#[vars.transportCompany == "TravelOnTip"]'>
 				<flow-ref doc:name="Flow Reference" doc:id="a9d5b045-5906-411a-a849-36263a778a20" name="getSchedules-CallTravelOnTip-subFlow" />
 				</when>
+			<when expression="#[vars.transportCompany != null and vars.transportCompany != 'FastGo' and  vars.transportCompany != 'TravelOnTip']">
+				<ee:transform doc:name="Transform Message" doc:id="83380f94-e327-44e6-8b5c-6468c0466216" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error" : vars.transportCompany ++ " not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
 			<otherwise >
 				<scatter-gather doc:name="Scatter-Gather" doc:id="54c1ca15-51af-44a3-8586-46f1bbd7f32a" >
 					<route >
